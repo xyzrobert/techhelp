@@ -93,10 +93,10 @@ export async function registerRoutes(app: Express) {
 
   app.patch("/api/bookings/:id/status", async (req, res) => {
     try {
-      const { status } = z.object({ 
-        status: z.enum(["pending", "accepted", "completed", "cancelled"]) 
+      const { status } = z.object({
+        status: z.enum(["pending", "accepted", "completed", "cancelled"])
       }).parse(req.body);
-      
+
       const booking = await storage.updateBookingStatus(parseInt(req.params.id), status);
       res.json(booking);
     } catch (error) {
@@ -121,5 +121,44 @@ export async function registerRoutes(app: Express) {
   });
 
   const httpServer = createServer(app);
+  // Generate test helpers if none exist
+  (async () => {
+    const helpers = await storage.getOnlineHelpers();
+    if (helpers.length === 0) {
+      const testHelpers = [
+        {
+          username: "techwhiz",
+          password: "test123",
+          name: "Alex Chen",
+          role: "helper",
+          bio: "Computer Science student specializing in hardware repairs",
+          skills: ["Hardware", "Networking", "Windows"],
+          verified: true
+        },
+        {
+          username: "netguru",
+          password: "test123",
+          name: "Sarah Smith",
+          role: "helper",
+          bio: "Network security specialist and PC troubleshooter",
+          skills: ["Networking", "Security", "Linux"],
+          verified: true
+        },
+        {
+          username: "codemaster",
+          password: "test123",
+          name: "James Wilson",
+          role: "helper",
+          bio: "Software developer helping with programming issues",
+          skills: ["Programming", "Web Development", "Mobile Apps"],
+          verified: false
+        }
+      ];
+
+      for (const helper of testHelpers) {
+        await storage.createUser(helper);
+      }
+    }
+  })();
   return httpServer;
 }
