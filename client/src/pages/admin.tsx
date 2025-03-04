@@ -1,3 +1,4 @@
+import { FC } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 
-export default function Admin() {
+const Admin: FC = () => {
   const { data: helpers } = useQuery<User[]>({ 
     queryKey: ["/api/helpers/online"] 
   });
@@ -13,7 +14,7 @@ export default function Admin() {
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Manage Helpers</CardTitle>
@@ -34,14 +35,14 @@ export default function Admin() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-4">
                   <Badge variant={helper.verified ? "default" : "outline"}>
                     {helper.verified ? "Verified" : "Unverified"}
                   </Badge>
                   <div className="flex items-center gap-2">
                     <Switch 
-                      checked={helper.isOnline}
+                      checked={helper.isOnline || false}
                       onCheckedChange={(checked) => {
                         // Will implement status toggle later
                         console.log("Toggle status", helper.id, checked);
@@ -59,4 +60,6 @@ export default function Admin() {
       </Card>
     </div>
   );
-}
+};
+
+export default Admin;
