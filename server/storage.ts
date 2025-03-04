@@ -28,13 +28,6 @@ export interface IStorage {
   // Reviews
   createReview(review: InsertReview): Promise<Review>;
   getServiceReviews(serviceId: number): Promise<Review[]>;
-  
-  // Payments
-  createPayment(payment: InsertPayment): Promise<Payment>;
-  getPayment(id: number): Promise<Payment | undefined>;
-  getBookingPayment(bookingId: number): Promise<Payment | undefined>;
-  getAllPayments(): Promise<Payment[]>;
-  updatePaymentStatus(id: number, status: string): Promise<Payment>;
 }
 
 export class MemStorage implements IStorage {
@@ -42,7 +35,6 @@ export class MemStorage implements IStorage {
   private services: Map<number, Service>;
   private bookings: Map<number, Booking>;
   private reviews: Map<number, Review>;
-  private payments: Map<number, Payment>;
   private currentIds: { [key: string]: number };
 
   constructor() {
@@ -50,13 +42,11 @@ export class MemStorage implements IStorage {
     this.services = new Map();
     this.bookings = new Map();
     this.reviews = new Map();
-    this.payments = new Map();
     this.currentIds = {
       users: 1,
       services: 1,
       bookings: 1,
-      reviews: 1,
-      payments: 1
+      reviews: 1
     };
   }
 
@@ -168,41 +158,6 @@ export class MemStorage implements IStorage {
     return Array.from(this.reviews.values()).filter(
       review => review.bookingId === serviceId
     );
-  }
-
-  // Payments
-  async createPayment(insertPayment: InsertPayment): Promise<Payment> {
-    const id = this.currentIds.payments++;
-    const payment: Payment = { 
-      ...insertPayment, 
-      id,
-      status: "pending"
-    };
-    this.payments.set(id, payment);
-    return payment;
-  }
-
-  async getPayment(id: number): Promise<Payment | undefined> {
-    return this.payments.get(id);
-  }
-
-  async getBookingPayment(bookingId: number): Promise<Payment | undefined> {
-    return Array.from(this.payments.values()).find(
-      payment => payment.bookingId === bookingId
-    );
-  }
-
-  async getAllPayments(): Promise<Payment[]> {
-    return Array.from(this.payments.values());
-  }
-
-  async updatePaymentStatus(id: number, status: string): Promise<Payment> {
-    const payment = await this.getPayment(id);
-    if (!payment) throw new Error("Payment not found");
-    
-    const updated = { ...payment, status };
-    this.payments.set(id, updated);
-    return updated;
   }
 }
 
