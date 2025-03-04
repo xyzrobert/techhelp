@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -11,6 +11,8 @@ export const users = pgTable("users", {
   bio: text("bio"),
   skills: text("skills").array(),
   isOnline: boolean("is_online").default(false),
+  showPhone: boolean("show_phone").default(false),
+  phoneNumber: text("phone_number"),
   rating: integer("rating").default(0),
   verified: boolean("verified").default(false),
 });
@@ -47,7 +49,8 @@ export const insertUserSchema = createInsertSchema(users).omit({
   id: true, 
   isOnline: true,
   rating: true,
-  verified: true 
+  verified: true,
+  showPhone: true
 });
 
 export const insertServiceSchema = createInsertSchema(services).omit({ 
