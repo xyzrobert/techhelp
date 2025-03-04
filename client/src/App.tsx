@@ -9,6 +9,7 @@ import Search from "@/pages/search";
 import Book from "@/pages/book";
 import Profile from "@/pages/profile";
 import Admin from "@/pages/admin";
+import Signup from "@/pages/signup";
 
 function Router() {
   return (
@@ -21,6 +22,7 @@ function Router() {
           <Route path="/book/:id" component={Book} />
           <Route path="/profile" component={Profile} />
           <Route path="/admin" component={Admin} />
+          <Route path="/signup" component={Signup} />
           <Route component={NotFound} />
         </Switch>
       </main>
