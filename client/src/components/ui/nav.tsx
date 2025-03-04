@@ -1,3 +1,4 @@
+
 import { Link } from "wouter";
 import { Button } from "./button";
 
@@ -9,7 +10,15 @@ export function Nav() {
           <a className="text-2xl font-bold">klarfix</a>
         </Link>
 
-        <div className="flex items-center ml-auto">
+        <div className="mx-auto flex items-center">
+          <Link href="/signup">
+            <Button variant="ghost" className="text-lg">
+              Studenten Registrierung
+            </Button>
+          </Link>
+        </div>
+
+        <div className="flex items-center">
           <Link href="/search">
             <Button variant="ghost" className="text-lg">
               Aktive Helfer
