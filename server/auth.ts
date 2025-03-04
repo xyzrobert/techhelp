@@ -7,6 +7,50 @@ import { mariadbStorage } from './mariadb-storage';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 export function setupAuth(app: Express) {
+  app.post('/api/auth/signup', async (req, res) => {
+    try {
+      const { name, email, password, role } = z.object({
+        name: z.string().min(1, "Name is required"),
+        email: z.string().email("Invalid email address"),
+        password: z.string().min(6, "Password must be at least 6 characters"),
+        role: z.enum(["helper", "student"])
+      }).parse(req.body);
+
+      // Check if user already exists
+      const conn = await mariadbStorage.getConnection();
+      try {
+        const existingUsers = await conn.query(
+          'SELECT * FROM users WHERE username = ?',
+          [email] // Using email as username
+        );
+
+        if (existingUsers.length > 0) {
+          return res.status(400).json({ error: 'User already exists' });
+        }
+
+        // Create new user
+        const result = await conn.query(
+          'INSERT INTO users (username, password, name, role) VALUES (?, ?, ?, ?)',
+          [email, password, name, role]
+        );
+
+        res.status(201).json({ 
+          message: 'User created successfully',
+          userId: result.insertId
+        });
+      } finally {
+        conn.release();
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors[0].message });
+      } else {
+        res.status(500).json({ error: 'Registration failed' });
+      }
+    }
+  });
+
   app.post('/api/auth/login', async (req, res) => {
     try {
       const { username, password } = z.object({

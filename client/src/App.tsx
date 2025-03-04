@@ -10,6 +10,7 @@ import Book from "@/pages/book";
 import Profile from "@/pages/profile";
 import Admin from "@/pages/admin";
 import Signup from "@/pages/signup";
+import HelperSignup from "@/pages/helper-signup";
 
 function Router() {
   return (
@@ -23,6 +24,7 @@ function Router() {
           <Route path="/profile" component={Profile} />
           <Route path="/admin" component={Admin} />
           <Route path="/signup" component={Signup} />
+          <Route path="/helper-signup" component={HelperSignup} />
           <Route component={NotFound} />
         </Switch>
       </main>

@@ -13,7 +13,7 @@ export function Nav() {
         <div className="mx-auto flex items-center">
           <Link href="/signup">
             <Button variant="ghost" className="text-lg">
-              Studenten Registrierung
+              Als hilfe registrieren
             </Button>
           </Link>
         </div>
