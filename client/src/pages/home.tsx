@@ -4,15 +4,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@shared/schema";
 import { Link } from "wouter";
-import { Monitor, Smartphone, Network, HardDrive, Wrench } from "lucide-react";
-
-const categories = [
-  { icon: Monitor, label: "Software", slug: "software" },
-  { icon: HardDrive, label: "Hardware", slug: "hardware" },
-  { icon: Network, label: "Network", slug: "network" },
-  { icon: Smartphone, label: "Mobile", slug: "mobile" },
-  { icon: Wrench, label: "Other", slug: "other" },
-];
 
 export default function Home() {
   const { data: onlineHelpers } = useQuery<User[]>({ 
@@ -38,51 +29,29 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Categories */}
+      {/* Active Helpers Section */}
       <section className="py-16 container mx-auto">
         <h2 className="text-3xl font-bold text-center mb-12">
-          What do you need help with?
+          Active Helpers
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {categories.map((cat) => (
-            <Link key={cat.slug} href={`/search?category=${cat.slug}`}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8">
+          {onlineHelpers?.map((helper) => (
+            <Link key={helper.id} href={`/search?helper=${helper.id}`}>
               <Card className="cursor-pointer hover:bg-accent transition-colors">
                 <CardContent className="p-6 text-center">
-                  <cat.icon className="w-12 h-12 mx-auto mb-4" />
-                  <h3 className="font-medium">{cat.label}</h3>
+                  <div className="relative inline-block">
+                    <Avatar className="w-16 h-16 mx-auto">
+                      <AvatarImage src={`https://avatar.vercel.sh/${helper.username}`} />
+                      <AvatarFallback>{helper.username[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+                  </div>
+                  <h3 className="font-medium mt-3">{helper.name}</h3>
+                  <p className="text-sm text-muted-foreground">{helper.rating} ★</p>
                 </CardContent>
               </Card>
             </Link>
           ))}
-        </div>
-      </section>
-
-      {/* Online Helpers */}
-      <section className="py-16 bg-secondary/10">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Online Helpers
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {onlineHelpers?.slice(0, 4).map((helper) => (
-              <Card key={helper.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4">
-                    <Avatar>
-                      <AvatarImage src={`https://avatar.vercel.sh/${helper.username}`} />
-                      <AvatarFallback>{helper.username[0]}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-medium">{helper.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {helper.skills?.join(", ")}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </div>
       </section>
     </div>

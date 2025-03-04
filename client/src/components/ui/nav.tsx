@@ -1,8 +1,10 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "./button";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./dropdown-menu";
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@shared/schema";
+import { Settings } from "lucide-react";
 
 export function Nav() {
   const [location] = useLocation();
@@ -29,6 +31,25 @@ export function Nav() {
               Find Help
             </Button>
           </Link>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Settings className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                Manage Helpers
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                View Reports
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                Settings
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {user ? (
             <Link href="/profile">
