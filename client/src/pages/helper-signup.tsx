@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,34 +19,45 @@ export default function HelperSignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Basic validation
+    if (!username || !password || !name || !skills) {
+      setError("All fields are required");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
     try {
-      const skillsArray = skills.split(',').map(skill => skill.trim()).filter(Boolean);
-      
-      const response = await fetch('/api/users', {
-        method: 'POST',
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username,
+          email: username, // Using username field as email
           password,
           name,
-          role: 'helper',
-          phoneNumber,
-          bio,
-          skills: skillsArray,
+          skills: skills.split(',').map(skill => skill.trim()),
+          role: "helper"
         }),
       });
 
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        console.error('Failed to parse JSON:', e);
+        throw new Error('Invalid server response');
+      }
+
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.error || 'Registration failed');
       }
 
       // Registration successful
+      console.log('Registration successful', data);
       setLocation('/login');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -76,7 +86,7 @@ export default function HelperSignupPage() {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input
@@ -87,7 +97,7 @@ export default function HelperSignupPage() {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
@@ -98,7 +108,7 @@ export default function HelperSignupPage() {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
               <Input
@@ -108,7 +118,7 @@ export default function HelperSignupPage() {
                 placeholder="123-456-7890"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="bio">Bio</Label>
               <Textarea
@@ -119,7 +129,7 @@ export default function HelperSignupPage() {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="skills">Skills (comma separated)</Label>
               <Input
@@ -130,9 +140,9 @@ export default function HelperSignupPage() {
                 required
               />
             </div>
-            
+
             {error && <p className="text-sm text-red-500">{error}</p>}
-            
+
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Creating Account..." : "Create Helper Account"}
             </Button>

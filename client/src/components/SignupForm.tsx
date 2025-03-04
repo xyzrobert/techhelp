@@ -17,41 +17,39 @@ export default function SignupForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     setIsLoading(true);
     setError("");
 
     try {
-      // Make API request to register user
-      const response = await fetch('/api/users', {
-        method: 'POST',
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username,
-          password,
           name,
-          email,
+          email: username, // Using username field as email
+          password,
           phoneNumber,
-          role: 'student'
+          role: "student" // Role is hardcoded for student registration
         }),
       });
 
-      // Check if response is OK
-      if (!response.ok) {
-        const contentType = response.headers.get('content-type');
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        console.error('Failed to parse JSON:', e);
+        throw new Error('Invalid server response');
+      }
 
-        if (contentType && contentType.includes('application/json')) {
-          const data = await response.json();
-          throw new Error(data.error || 'Registration failed');
-        } else {
-          const text = await response.text();
-          console.error('Server response:', text.substring(0, 100));
-          throw new Error(`Server error: ${response.status}`);
-        }
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
       }
 
       // Registration successful
+      console.log('Registration successful', data);
       setLocation('/login');
     } catch (err) {
       console.error('Signup error:', err);
