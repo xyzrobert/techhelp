@@ -39,9 +39,11 @@ export function Nav() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                Manage Helpers
-              </DropdownMenuItem>
+              <Link href="/admin">
+                <DropdownMenuItem>
+                  Manage Helpers
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuItem>
                 View Reports
               </DropdownMenuItem>
