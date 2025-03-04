@@ -4,6 +4,34 @@ import { storage } from "./storage";
 import { insertUserSchema, insertServiceSchema, insertBookingSchema, insertReviewSchema } from "@shared/schema";
 import { z } from "zod";
 
+// Create test helpers
+const testHelpers = [
+  {
+    username: "techwhiz",
+    password: "test123",
+    name: "Alex Chen",
+    role: "helper" as const,
+    bio: "Computer Science student specializing in hardware repairs",
+    skills: ["Hardware", "Networking", "Windows"],
+  },
+  {
+    username: "netguru",
+    password: "test123",
+    name: "Sarah Smith",
+    role: "helper" as const,
+    bio: "Network security specialist and PC troubleshooter",
+    skills: ["Networking", "Security", "Linux"],
+  },
+  {
+    username: "codemaster",
+    password: "test123",
+    name: "James Wilson",
+    role: "helper" as const,
+    bio: "Software developer helping with programming issues",
+    skills: ["Programming", "Web Development", "Mobile Apps"],
+  }
+];
+
 export async function registerRoutes(app: Express) {
   // Users
   app.post("/api/users", async (req, res) => {
@@ -27,11 +55,19 @@ export async function registerRoutes(app: Express) {
 
   app.post("/api/users/:id/online", async (req, res) => {
     try {
-      const { isOnline } = z.object({ isOnline: z.boolean() }).parse(req.body);
-      const user = await storage.updateUserOnlineStatus(parseInt(req.params.id), isOnline);
+      const parsedId = parseInt(req.params.id);
+      const { isOnline } = z.object({ 
+        isOnline: z.boolean() 
+      }).parse(req.body);
+
+      const user = await storage.updateUserOnlineStatus(parsedId, isOnline);
       res.json(user);
     } catch (error) {
-      res.status(400).json({ error: "Invalid request" });
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid request format. Expected: { isOnline: boolean }" });
+      } else {
+        res.status(404).json({ error: "User not found or invalid request" });
+      }
     }
   });
 
@@ -119,6 +155,16 @@ export async function registerRoutes(app: Express) {
     const reviews = await storage.getServiceReviews(parseInt(req.params.id));
     res.json(reviews);
   });
+
+  // Create test helpers
+  for (const helper of testHelpers) {
+    try {
+      const user = await storage.createUser(helper);
+      await storage.updateUserOnlineStatus(user.id, true);
+    } catch (error) {
+      console.error("Error creating test helper:", error);
+    }
+  }
 
   const httpServer = createServer(app);
   return httpServer;
