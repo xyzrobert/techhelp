@@ -1,7 +1,14 @@
 
-// This script initializes the database and creates required tables
-require('dotenv').config();
-const mariadb = require('mariadb');
+import mariadb from 'mariadb';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Initialize dotenv
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Create a direct connection with increased timeout
 async function initializeDatabase() {
