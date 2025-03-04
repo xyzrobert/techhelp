@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 
 export default function HelperSignupPage() {
   const [username, setUsername] = useState("");
@@ -16,7 +16,7 @@ export default function HelperSignupPage() {
   const [skills, setSkills] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [, navigate] = useNavigate();
+  const [, setLocation] = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +48,7 @@ export default function HelperSignupPage() {
       }
 
       // Registration successful
-      navigate('/login');
+      setLocation('/login');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
