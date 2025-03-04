@@ -7,7 +7,7 @@ export function Nav() {
     <nav className="border-b">
       <div className="flex h-16 items-center px-4 container mx-auto">
         <Link href="/">
-          <a className="text-2xl font-bold">klarfix</a>
+          <span className="text-2xl font-bold cursor-pointer">klarfix</span>
         </Link>
 
         <div className="mx-auto flex items-center">
