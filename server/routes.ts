@@ -178,6 +178,53 @@ export async function registerRoutes(app: Express) {
     res.json(reviews);
   });
 
+  // Payments
+  app.post("/api/payments", async (req, res) => {
+    try {
+      const paymentData = insertPaymentSchema.parse(req.body);
+      const payment = await storage.createPayment(paymentData);
+      res.json(payment);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid payment data" });
+    }
+  });
+
+  app.get("/api/payments", async (_req, res) => {
+    const payments = await storage.getAllPayments();
+    res.json(payments);
+  });
+
+  app.get("/api/payments/:id", async (req, res) => {
+    const payment = await storage.getPayment(parseInt(req.params.id));
+    if (!payment) {
+      res.status(404).json({ error: "Payment not found" });
+      return;
+    }
+    res.json(payment);
+  });
+
+  app.get("/api/bookings/:id/payment", async (req, res) => {
+    const payment = await storage.getBookingPayment(parseInt(req.params.id));
+    if (!payment) {
+      res.status(404).json({ error: "Payment not found for this booking" });
+      return;
+    }
+    res.json(payment);
+  });
+
+  app.patch("/api/payments/:id/status", async (req, res) => {
+    try {
+      const { status } = z.object({
+        status: z.enum(["pending", "completed", "cancelled"])
+      }).parse(req.body);
+
+      const payment = await storage.updatePaymentStatus(parseInt(req.params.id), status);
+      res.json(payment);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid status update" });
+    }
+  });
+
   // Create test helpers
   for (const helper of testHelpers) {
     try {
