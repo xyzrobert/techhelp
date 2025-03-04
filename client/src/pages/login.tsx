@@ -1,98 +1,122 @@
 
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { apiUrl } from "@/utils/apiHelpers";
 
-export default function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+const formSchema = z.object({
+  username: z.string().min(1, "Email is required").email("Invalid email format"),
+  password: z.string().min(1, "Password is required"),
+});
+
+export default function Login() {
   const [, setLocation] = useLocation();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    setError("");
+    setError(null);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
+      const response = await fetch(`${apiUrl}/api/auth/login`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          username,
-          password,
-        }),
+        credentials: "include",
+        body: JSON.stringify(values),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Login failed');
+        throw new Error(data.error || "Login fehlgeschlagen");
       }
 
       // Login successful
       setLocation('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten');
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold text-center mb-8">Login</h1>
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle>Welcome back</CardTitle>
-          <CardDescription>Login to your account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="johndoe"
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            
-            {error && <p className="text-sm text-red-500">{error}</p>}
-            
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Logging in..." : "Login"}
-            </Button>
-          </form>
+    <div className="container mx-auto max-w-md py-12">
+      <h1 className="text-2xl font-bold mb-6">Anmeldung</h1>
+      
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+          {error}
+        </div>
+      )}
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="deine.email@example.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           
-          <div className="mt-4 text-center">
-            <p>Don't have an account?</p>
-            <div className="flex justify-center space-x-4 mt-2">
-              <a href="/signup" className="text-blue-500 hover:underline">Sign up as Student</a>
-              <span>|</span>
-              <a href="/helper-signup" className="text-blue-500 hover:underline">Sign up as Helper</a>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Passwort</FormLabel>
+                <FormControl>
+                  <Input type="password" placeholder="Passwort" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Anmelden..." : "Anmelden"}
+          </Button>
+        </form>
+      </Form>
+
+      <div className="mt-4 text-center">
+        <p>
+          Noch kein Konto?{" "}
+          <a onClick={() => setLocation('/signup')} className="text-blue-600 cursor-pointer">
+            Registrieren
+          </a>
+        </p>
+      </div>
     </div>
   );
 }

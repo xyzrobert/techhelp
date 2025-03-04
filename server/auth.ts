@@ -9,11 +9,14 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 export function setupAuth(app: Express) {
   app.post('/api/auth/signup', async (req, res) => {
     try {
-      const { name, email, password, role } = z.object({
+      const userData = z.object({
         name: z.string().min(1, "Name is required"),
-        email: z.string().email("Invalid email address"),
+        username: z.string().min(1, "Email is required").email("Invalid email address"),
         password: z.string().min(6, "Password must be at least 6 characters"),
-        role: z.enum(["helper", "student"])
+        role: z.enum(["helper", "client"]),
+        bio: z.string().optional(),
+        showPhone: z.boolean().default(false),
+        phoneNumber: z.string().optional(),
       }).parse(req.body);
 
       // Check if user already exists
@@ -21,18 +24,26 @@ export function setupAuth(app: Express) {
       try {
         const existingUsers = await conn.query(
           'SELECT * FROM users WHERE username = ?',
-          [email] // Using email as username
+          [userData.username]
         );
 
         if (existingUsers.length > 0) {
           return res.status(400).json({ error: 'User already exists' });
         }
 
-        // Create new user
-        const result = await conn.query(
-          'INSERT INTO users (username, password, name, role) VALUES (?, ?, ?, ?)',
-          [email, password, name, role]
-        );
+        // Create user
+        const result = await conn.query(`
+          INSERT INTO users (username, password, name, role, bio, show_phone, phone_number) 
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, [
+          userData.username,
+          userData.password, // In production, you should hash this password
+          userData.name,
+          userData.role,
+          userData.bio || null,
+          userData.showPhone,
+          userData.phoneNumber || null
+        ]);
 
         res.status(201).json({ 
           message: 'User created successfully',

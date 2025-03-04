@@ -1,134 +1,222 @@
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { useLocation } from "wouter";
 
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { apiUrl } from "@/utils/apiHelpers";
+
+const formSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  username: z.string().min(1, "Email/Username is required").email("Invalid email format"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  role: z.enum(["helper", "client"]),
+  bio: z.string().optional(),
+  showPhone: z.boolean().default(false),
+  phoneNumber: z.string().optional(),
+});
+
 export default function SignupForm() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [email, setEmail] = useState(""); // Added email state
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      username: "",
+      password: "",
+      role: "helper",
+      bio: "",
+      showPhone: false,
+      phoneNumber: "",
+    },
+  });
 
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    setError("");
+    setError(null);
 
     try {
-      const response = await fetch("/api/auth/signup", {
+      const response = await fetch(`${apiUrl}/api/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name,
-          email: username, // Using username field as email
-          password,
-          phoneNumber,
-          role: "student" // Role is hardcoded for student registration
-        }),
+        body: JSON.stringify(values),
       });
 
-      let data;
-      try {
-        data = await response.json();
-      } catch (e) {
-        console.error('Failed to parse JSON:', e);
-        throw new Error('Invalid server response');
-      }
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Registration failed');
+        throw new Error(data.error || "Registrierung fehlgeschlagen");
       }
 
       // Registration successful
-      console.log('Registration successful', data);
       setLocation('/login');
     } catch (err) {
-      console.error('Signup error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten');
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Create Student Account</CardTitle>
-        <CardDescription>Sign up to find tech help</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="John Doe"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="johndoe@example.com"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="johndoe"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input
-              id="phone"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="123-456-7890"
-            />
-          </div>
-
-          {error && <p className="text-sm text-red-500">{error}</p>}
-
+    <div className="max-w-md w-full">
+      <h2 className="text-2xl font-bold mb-6">Als Helfer registrieren</h2>
+      
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+          {error}
+        </div>
+      )}
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Dein Name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="deine.email@example.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Passwort</FormLabel>
+                <FormControl>
+                  <Input type="password" placeholder="Passwort" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="role"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Rolle</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Wähle deine Rolle" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="helper">Helper</SelectItem>
+                    <SelectItem value="client">Student</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="bio"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Biografie (für Helfer)</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Erzähle etwas über dich und deine Fähigkeiten"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="showPhone"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>
+                    Zeige meine Telefonnummer öffentlich
+                  </FormLabel>
+                </div>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="phoneNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Telefonnummer (optional)</FormLabel>
+                <FormControl>
+                  <Input type="tel" placeholder="+49 123 45678" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creating Account..." : "Create Account"}
+            {isLoading ? "Registrierung..." : "Registrieren"}
           </Button>
         </form>
-      </CardContent>
-    </Card>
+      </Form>
+    </div>
   );
 }

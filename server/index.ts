@@ -43,7 +43,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  setupAuth(app);
+  setupAuth(app); // Auth setup moved here as per the provided change
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

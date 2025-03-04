@@ -6,10 +6,11 @@ dotenv.config();
 
 // Create a connection pool
 const pool = mariadb.createPool({
-  host: process.env.MARIADB_HOST || 'localhost',
-  user: process.env.MARIADB_USER || 'root',
-  password: process.env.MARIADB_PASSWORD || '',
-  database: process.env.MARIADB_DATABASE || 'klarfix',
+  host: process.env.MARIADB_HOST || 'db.tz-gaming.com',
+  port: parseInt(process.env.MARIADB_PORT || '3306'),
+  user: process.env.MARIADB_USER || 'u161_aKh5jybBkZ',
+  password: process.env.MARIADB_PASSWORD || 'm4f!C0Vx^d7zkltPi^m^oD3r',
+  database: process.env.MARIADB_DATABASE || 'u161_klarfix',
   connectionLimit: 5
 });
 
@@ -57,7 +58,7 @@ async function setupDatabase() {
         client_id INT NOT NULL,
         service_id INT NOT NULL,
         status ENUM('pending', 'accepted', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
-        date DATETIME NOT NULL,
+        date TIMESTAMP NOT NULL,
         FOREIGN KEY (client_id) REFERENCES users(id),
         FOREIGN KEY (service_id) REFERENCES services(id)
       )
@@ -84,7 +85,7 @@ async function setupDatabase() {
         platform_amount INT NOT NULL,
         method ENUM('cash', 'online', 'other') NOT NULL,
         status ENUM('pending', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
-        date DATETIME NOT NULL,
+        date TIMESTAMP NOT NULL,
         FOREIGN KEY (booking_id) REFERENCES bookings(id)
       )
     `);
@@ -96,9 +97,9 @@ async function setupDatabase() {
     await conn.query(`
       INSERT IGNORE INTO users (username, password, name, role, bio, skills)
       VALUES 
-        ('techwhiz', 'test123', 'Alex Chen', 'helper', 'Computer Science student specializing in hardware repairs', '["Hardware", "Networking", "Windows"]'),
-        ('netguru', 'test123', 'Sarah Smith', 'helper', 'Network security specialist and PC troubleshooter', '["Networking", "Security", "Linux"]'),
-        ('codemaster', 'test123', 'James Wilson', 'helper', 'Software developer helping with programming issues', '["Programming", "Web Development", "Mobile Apps"]')
+        ('techwhiz@example.com', 'test123', 'Alex Chen', 'helper', 'Computer Science student specializing in hardware repairs', '["Hardware", "Networking", "Windows"]'),
+        ('netguru@example.com', 'test123', 'Sarah Smith', 'helper', 'Network security specialist and PC troubleshooter', '["Networking", "Security", "Linux"]'),
+        ('codemaster@example.com', 'test123', 'James Wilson', 'helper', 'Software developer helping with programming issues', '["Programming", "Web Development", "Mobile Apps"]')
     `);
 
   } catch (err) {

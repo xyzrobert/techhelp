@@ -17,7 +17,6 @@ const pool = mariadb.createPool({
   database: process.env.MARIADB_DATABASE || 'u161_klarfix',
   connectionLimit: 5
 });
-</old_str>
 
 export const mariadbStorage = {
   async getConnection() {
@@ -61,6 +60,34 @@ export const mariadbStorage = {
     try {
       conn = await pool.getConnection();
       const rows = await conn.query('SELECT * FROM users WHERE id = ?', [id]);
+      
+      if (rows.length === 0) return null;
+      
+      const user = rows[0];
+      return {
+        id: user.id,
+        username: user.username,
+        password: user.password,
+        name: user.name,
+        role: user.role,
+        bio: user.bio,
+        skills: user.skills ? JSON.parse(user.skills) : null,
+        isOnline: Boolean(user.is_online),
+        showPhone: Boolean(user.show_phone),
+        phoneNumber: user.phone_number,
+        rating: user.rating,
+        verified: Boolean(user.verified)
+      };
+    } finally {
+      if (conn) conn.release();
+    }
+  },
+
+  async getUserByUsername(username: string): Promise<User | null> {
+    let conn;
+    try {
+      conn = await pool.getConnection();
+      const rows = await conn.query('SELECT * FROM users WHERE username = ?', [username]);
       
       if (rows.length === 0) return null;
       
@@ -145,8 +172,5 @@ export const mariadbStorage = {
     } finally {
       if (conn) conn.release();
     }
-  },
-
-  // Additional methods for bookings, reviews, payments
-  // can be implemented following the same pattern
+  }
 };
