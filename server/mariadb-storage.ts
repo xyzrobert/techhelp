@@ -18,7 +18,7 @@ const pool = mariadb.createPool({
   connectionLimit: 3,        // Reduce connection limit
   connectTimeout: 60000,     // 60 seconds timeout
   acquireTimeout: 60000,     // 60 seconds timeout
-  idleTimeout: 60000,        // How long connections can be idle
+  idleTimeout: 60000,        // How long connectio  ns can be idle
   trace: true,               // Enable trace for debugging
   compress: true,            // Use compression for better performance
   maxAllowedPacket: 16777216, // 16MB packet size
