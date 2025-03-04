@@ -38,6 +38,29 @@ pool.on('error', (err) => {
   console.error('Database pool error:', err);
 });
 
+// Add a function to test connection with retry
+export async function testConnectionWithRetry(maxRetries = 3, delay = 5000) {
+  let retries = 0;
+  while (retries < maxRetries) {
+    try {
+      const conn = await pool.getConnection();
+      console.log('Database connection successful!');
+      conn.release();
+      return true;
+    } catch (err) {
+      console.error(`Connection attempt ${retries + 1} failed:`, err.message);
+      retries++;
+      if (retries >= maxRetries) {
+        console.error('Max retries reached. Could not connect to database.');
+        return false;
+      }
+      console.log(`Retrying in ${delay/1000} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  return false;
+}
+
 export const mariadbStorage = {
   async getConnection() {
     return await pool.getConnection();
