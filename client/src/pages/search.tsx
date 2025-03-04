@@ -16,7 +16,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
-import { LiveChat } from "@/components/LiveChat";
+import LiveChat from "@/components/LiveChat"; //Corrected import assuming LiveChat component exists
 
 export default function Search() {
   const { toast } = useToast();
@@ -113,7 +113,7 @@ export default function Search() {
                       </div>
                     </DialogContent>
                   </Dialog>
-                  
+
                   <Button size="lg" onClick={() => setActiveChat(helper.id)}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                     Live Chat
