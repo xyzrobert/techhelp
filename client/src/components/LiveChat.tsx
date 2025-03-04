@@ -56,8 +56,8 @@ export default function LiveChat({ helperId, helperName, helperUsername, onClose
   return (
     <div className="lg:absolute lg:top-0 lg:right-0 lg:h-full z-40 w-full lg:w-1/3 lg:max-w-md">
       <Card className="w-full h-full shadow-lg">
-        <CardHeader className="bg-primary text-white py-4 px-5 flex flex-row justify-between">
-          <CardTitle className="text-lg font-bold">Chat mit {helperName}</CardTitle>
+        <CardHeader className="bg-primary text-white py-2 px-4 flex flex-row justify-between">
+          <CardTitle className="text-base">Chat mit {helperName}</CardTitle>
           <Button 
             variant="ghost" 
             size="sm" 
@@ -71,7 +71,7 @@ export default function LiveChat({ helperId, helperName, helperUsername, onClose
           </Button>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="h-[400px] lg:h-[calc(100vh-150px)] overflow-y-auto p-4 flex flex-col gap-3">
+          <div className="h-[350px] lg:h-[calc(100vh-120px)] overflow-y-auto p-3 flex flex-col gap-2">
             {messages.map(message => (
               <div 
                 key={message.id} 
@@ -100,14 +100,14 @@ export default function LiveChat({ helperId, helperName, helperUsername, onClose
               </div>
             ))}
           </div>
-          <form onSubmit={handleSendMessage} className="p-4 border-t flex gap-2">
+          <form onSubmit={handleSendMessage} className="p-2 border-t flex gap-2">
             <Input
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Schreiben Sie eine Nachricht..."
-              className="text-base"
+              className="text-sm"
             />
-            <Button type="submit" size="default" className="px-6">
+            <Button type="submit" size="sm" className="px-3">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13" />
                 <polygon points="22 2 15 22 11 13 2 9 22 2" />
