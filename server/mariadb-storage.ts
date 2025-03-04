@@ -10,12 +10,14 @@ import {
 
 // Create a connection pool
 const pool = mariadb.createPool({
-  host: process.env.MARIADB_HOST || 'localhost',
-  user: process.env.MARIADB_USER || 'root',
-  password: process.env.MARIADB_PASSWORD || '',
-  database: process.env.MARIADB_DATABASE || 'klarfix',
+  host: process.env.MARIADB_HOST || 'db.tz-gaming.com',
+  port: parseInt(process.env.MARIADB_PORT || '3306'),
+  user: process.env.MARIADB_USER || 'u161_aKh5jybBkZ',
+  password: process.env.MARIADB_PASSWORD || 'm4f!C0Vx^d7zkltPi^m^oD3r',
+  database: process.env.MARIADB_DATABASE || 'u161_klarfix',
   connectionLimit: 5
 });
+</old_str>
 
 export const mariadbStorage = {
   async getConnection() {
