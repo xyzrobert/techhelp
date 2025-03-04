@@ -15,7 +15,23 @@ const pool = mariadb.createPool({
   user: process.env.MARIADB_USER || 'u161_aKh5jybBkZ',
   password: process.env.MARIADB_PASSWORD || 'm4f!C0Vx^d7zkltPi^m^oD3r',
   database: process.env.MARIADB_DATABASE || 'u161_klarfix',
-  connectionLimit: 5
+  connectionLimit: 5,
+  connectTimeout: 30000, // 30 seconds timeout
+  acquireTimeout: 30000, // 30 seconds timeout for acquiring connection from pool
+  trace: true // Enable trace for debugging
+});
+
+// Log connection attempts
+pool.on('connection', (conn) => {
+  console.log('New connection established');
+});
+
+pool.on('acquire', (conn) => {
+  console.log('Connection acquired from pool');
+});
+
+pool.on('error', (err) => {
+  console.error('Database pool error:', err);
 });
 
 export const mariadbStorage = {

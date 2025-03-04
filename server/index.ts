@@ -43,8 +43,19 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  setupAuth(app); // Auth setup moved here as per the provided change
-  const server = await registerRoutes(app);
+  try {
+    // Test database connection at startup
+    const { mariadbStorage } = require('./mariadb-storage');
+    console.log('Testing database connection at startup...');
+    const conn = await mariadbStorage.getConnection().catch(err => {
+      console.error('Failed to connect to database at startup:', err);
+      throw new Error('Database connection failed. Please check your database credentials and connectivity.');
+    });
+    console.log('Database connection successful!');
+    conn.release();
+    
+    setupAuth(app);
+    const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -73,4 +84,8 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
   });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
 })();
