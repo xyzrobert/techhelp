@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +10,7 @@ export default function SignupForm() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState(""); // Added email state
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
@@ -21,6 +21,7 @@ export default function SignupForm() {
     setError("");
 
     try {
+      // Make API request to register user
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: {
@@ -30,19 +31,30 @@ export default function SignupForm() {
           username,
           password,
           name,
-          role: 'client',
+          email,
           phoneNumber,
+          role: 'student'
         }),
       });
 
+      // Check if response is OK
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Registration failed');
+        const contentType = response.headers.get('content-type');
+
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          throw new Error(data.error || 'Registration failed');
+        } else {
+          const text = await response.text();
+          console.error('Server response:', text.substring(0, 100));
+          throw new Error(`Server error: ${response.status}`);
+        }
       }
 
       // Registration successful
       setLocation('/login');
     } catch (err) {
+      console.error('Signup error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
@@ -67,7 +79,19 @@ export default function SignupForm() {
               required
             />
           </div>
-          
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="johndoe@example.com"
+              required
+            />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="username">Username</Label>
             <Input
@@ -78,7 +102,7 @@ export default function SignupForm() {
               required
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input
@@ -89,7 +113,7 @@ export default function SignupForm() {
               required
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="phone">Phone Number</Label>
             <Input
@@ -99,9 +123,9 @@ export default function SignupForm() {
               placeholder="123-456-7890"
             />
           </div>
-          
+
           {error && <p className="text-sm text-red-500">{error}</p>}
-          
+
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Creating Account..." : "Create Account"}
           </Button>
