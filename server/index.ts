@@ -45,7 +45,8 @@ app.use((req, res, next) => {
 (async () => {
   try {
     // Test database connection at startup
-    const { mariadbStorage } = require('./mariadb-storage');
+    // Using import instead of require
+    import { mariadbStorage } from './mariadb-storage';
     console.log('Testing database connection at startup...');
     const conn = await mariadbStorage.getConnection().catch(err => {
       console.error('Failed to connect to database at startup:', err);
@@ -74,9 +75,9 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client
-  const port = 5000;
+  // Use environment variable for port or default to 3000
+  // this avoids port conflicts
+  const port = process.env.PORT || 3000;
   server.listen({
     port,
     host: "0.0.0.0",
