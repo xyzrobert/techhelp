@@ -6,7 +6,7 @@ export function Nav() {
     <nav className="border-b">
       <div className="flex h-16 items-center px-4 container mx-auto">
         <Link href="/">
-          <a className="text-2xl font-bold">SmartFreund</a>
+          <a className="text-2xl font-bold">klarfix</a>
         </Link>
 
         <div className="flex items-center ml-auto">

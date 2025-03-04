@@ -5,8 +5,8 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background">
       <div className="text-center px-4">
-        <h1 className="text-4xl sm:text-5xl font-bold mb-6">
-          SmartFreund
+        <h1 className="text-9xl sm:text-5xl font-bold mb-6">
+          klar, fix!
         </h1>
         <p className="text-xl text-muted-foreground mb-12 max-w-2xl">
           Technische Hilfe von vertrauenswürdigen Helfern in Ihrer Nähe
