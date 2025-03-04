@@ -18,6 +18,9 @@ const pool = mariadb.createPool({
 });
 
 export const mariadbStorage = {
+  async getConnection() {
+    return await pool.getConnection();
+  },
   // User operations
   async createUser(userData: InsertUser): Promise<User> {
     let conn;
