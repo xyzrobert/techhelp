@@ -114,9 +114,9 @@ export default function Search() {
                     </DialogContent>
                   </Dialog>
 
-                  <Button size="lg" onClick={() => setActiveChat(helper.id)}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    Live Chat
+                  <Button size="lg" onClick={() => setActiveChat(helper.id)} className="text-lg font-bold py-6 px-8 bg-green-600 hover:bg-green-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    JETZT CHATTEN
                   </Button>
                 </div>
               </div>
@@ -125,15 +125,30 @@ export default function Search() {
         ))}
       </div>
 
-      {/* Live Chat */}
-      {activeChat !== null && helpers && (
-        <LiveChat
-          helperId={activeChat}
-          helperName={helpers.find(h => h.id === activeChat)?.name || "Helfer"}
-          helperUsername={helpers.find(h => h.id === activeChat)?.username || "helfer"}
-          onClose={() => setActiveChat(null)}
-        />
-      )}
+      {/* Layout für Hauptinhalt und Chat */}
+      <div className="relative">
+        {/* Live Chat neben dem Hauptinhalt */}
+        {activeChat !== null && helpers && (
+          <div className="lg:grid lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              {/* Hier bleibt der Hauptinhalt der Seite */}
+            </div>
+            <div className="lg:col-span-1">
+              <LiveChat
+                helperId={activeChat}
+                helperName={helpers.find(h => h.id === activeChat)?.name || "Helfer"}
+                helperUsername={helpers.find(h => h.id === activeChat)?.username || "helfer"}
+                onClose={() => setActiveChat(null)}
+              />
+            </div>
+          </div>
+        )}
+        {activeChat === null && (
+          <div>
+            {/* Hauptinhalt wenn kein Chat aktiv ist */}
+          </div>
+        )}
+      </div>
 
       {/* Only show services section if category is selected */}
       {category && (
