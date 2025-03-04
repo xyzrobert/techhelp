@@ -9,6 +9,8 @@ import Search from "@/pages/search";
 import Book from "@/pages/book";
 import Profile from "@/pages/profile";
 import Admin from "@/pages/admin";
+import React from "react";
+import { Footer } from "./components/Footer"; // Added import statement
 
 function Router() {
   return (
@@ -24,6 +26,7 @@ function Router() {
           <Route component={NotFound} />
         </Switch>
       </main>
+      <Footer/> {/* Added Footer Component */}
     </div>
   );
 }
