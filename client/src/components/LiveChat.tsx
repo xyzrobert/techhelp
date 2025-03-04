@@ -5,13 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function LiveChat() {
-  const [isOpen, setIsOpen] = useState(false);
+interface LiveChatProps {
+  helperId: number;
+  helperName: string;
+  helperUsername: string;
+  onClose: () => void;
+}
+
+export default function LiveChat({ helperId, helperName, helperUsername, onClose }: LiveChatProps) {
   const [messages, setMessages] = useState([
     { 
       id: 1, 
       sender: "system", 
-      text: "Willkommen beim LiveChat! Wie können wir Ihnen helfen?", 
+      text: `Willkommen beim Chat mit ${helperName}! Wie kann Ihnen geholfen werden?`, 
       time: "Gerade eben" 
     }
   ]);
@@ -40,38 +46,23 @@ export default function LiveChat() {
         {
           id: prev.length + 1,
           sender: "helper",
-          text: "Danke für Ihre Nachricht! Ein Helfer wird sich in Kürze bei Ihnen melden.",
+          text: `Danke für Ihre Nachricht! Ich (${helperName}) werde mich gleich darum kümmern.`,
           time: "Gerade eben"
         }
       ]);
     }, 1000);
   };
 
-  if (!isOpen) {
-    return (
-      <div className="fixed bottom-4 right-4 z-50">
-        <Button 
-          className="rounded-full w-12 h-12 bg-primary text-white shadow-lg"
-          onClick={() => setIsOpen(true)}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <div className="fixed bottom-4 right-4 z-50">
       <Card className="w-[350px] shadow-lg">
         <CardHeader className="bg-primary text-white py-3 px-4 flex flex-row justify-between">
-          <CardTitle className="text-sm">Live Chat</CardTitle>
+          <CardTitle className="text-sm">Chat mit {helperName}</CardTitle>
           <Button 
             variant="ghost" 
             size="sm" 
             className="h-6 w-6 p-0 text-white" 
-            onClick={() => setIsOpen(false)}
+            onClick={onClose}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -89,8 +80,11 @@ export default function LiveChat() {
                 {message.sender !== 'user' && (
                   <Avatar className="h-8 w-8 mr-2">
                     <AvatarFallback>
-                      {message.sender === 'system' ? 'S' : 'H'}
+                      {message.sender === 'system' ? 'S' : helperName.charAt(0)}
                     </AvatarFallback>
+                    {message.sender === 'helper' && (
+                      <AvatarImage src={`https://avatars.githubusercontent.com/${helperUsername}`} />
+                    )}
                   </Avatar>
                 )}
                 <div 
