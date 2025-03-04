@@ -83,10 +83,7 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({
 
 export const insertPaymentSchema = createInsertSchema(payments).omit({ 
   id: true,
-  status: true,
-  date: true
-}).extend({
-  date: z.coerce.date().optional().default(() => new Date())
+  status: true
 });
 
 export type User = typeof users.$inferSelect;
