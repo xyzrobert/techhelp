@@ -71,6 +71,28 @@ export async function registerRoutes(app: Express) {
     }
   });
 
+  // Contact endpoint
+  app.post("/api/contact/:id", async (req, res) => {
+    try {
+      const { phoneNumber } = z.object({
+        phoneNumber: z.string().min(1, "Phone number is required")
+      }).parse(req.body);
+
+      const helper = await storage.getUser(parseInt(req.params.id));
+      if (!helper) {
+        res.status(404).json({ error: "Helper not found" });
+        return;
+      }
+
+      // For now, just log the contact request
+      console.log(`Contact request for helper ${helper.name} from ${phoneNumber}`);
+
+      res.json({ message: "Contact request sent" });
+    } catch (error) {
+      res.status(400).json({ error: "Invalid request" });
+    }
+  });
+
   app.get("/api/helpers/online", async (_req, res) => {
     const helpers = await storage.getOnlineHelpers();
     res.json(helpers);
