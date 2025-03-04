@@ -45,6 +45,21 @@ export const reviews = pgTable("reviews", {
   comment: text("comment"),
 });
 
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").notNull(),
+  amount: integer("amount").notNull(),
+  studentAmount: integer("student_amount").notNull(),
+  platformAmount: integer("platform_amount").notNull(),
+  method: text("method", { 
+    enum: ["cash", "online", "other"] 
+  }).notNull(),
+  status: text("status", { 
+    enum: ["pending", "completed", "cancelled"] 
+  }).notNull().default("pending"),
+  date: timestamp("date").notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({ 
   id: true, 
   isOnline: true,
@@ -66,6 +81,11 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({
   id: true 
 });
 
+export const insertPaymentSchema = createInsertSchema(payments).omit({ 
+  id: true,
+  status: true
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Service = typeof services.$inferSelect;
@@ -74,3 +94,5 @@ export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
 export type Review = typeof reviews.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
