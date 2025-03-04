@@ -15,13 +15,21 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 
 export default function Search() {
   const { toast } = useToast();
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [location] = useLocation();
+  const category = new URLSearchParams(location.split('?')[1] || '').get("category");
 
   const { data: helpers } = useQuery<User[]>({ 
     queryKey: ["/api/helpers/online"] 
+  });
+
+  const { data: services } = useQuery<Service[]>({ 
+    queryKey: ["/api/services/search", category],
+    enabled: !!category
   });
 
   const handleContact = async (helper: User) => {
@@ -39,14 +47,6 @@ export default function Search() {
       });
     }
   };
-
-  const { data: services } = useQuery<Service[]>({ 
-    queryKey: ["/api/services/search", category],
-  });
-
-  const [location] = useLocation();
-  const category = new URLSearchParams(location.split('?')[1]).get("category");
-
 
   return (
     <div className="container mx-auto py-8">
@@ -109,10 +109,13 @@ export default function Search() {
         ))}
       </div>
 
-      <h1 className="text-3xl font-bold mb-6 mt-8">
-            Available Services
-            {category && <Badge className="ml-2">{category}</Badge>}
-          </h1>
+      {/* Only show services section if category is selected */}
+      {category && (
+        <>
+          <h2 className="text-3xl font-bold mb-6 mt-8">
+            Verfügbare Dienste
+            <Badge className="ml-2">{category}</Badge>
+          </h2>
 
           <div className="grid gap-6">
             {services?.map((service) => (
@@ -134,18 +137,15 @@ export default function Search() {
                       <p className="text-2xl font-bold">
                         ${(service.price / 100).toFixed(2)}
                       </p>
-                      <p className="text-sm text-muted-foreground">per hour</p>
+                      <p className="text-sm text-muted-foreground">pro Stunde</p>
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="bg-secondary/5 p-6">
-                  <Link href={`/book/${service.id}`}>
-                    <Button className="ml-auto">Book Now</Button>
-                  </Link>
-                </CardFooter>
               </Card>
             ))}
           </div>
+        </>
+      )}
     </div>
   );
 }
