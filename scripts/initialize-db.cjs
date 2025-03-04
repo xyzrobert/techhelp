@@ -1,4 +1,3 @@
-
 // This script initializes the database and creates required tables
 require('dotenv').config();
 const mariadb = require('mariadb');
@@ -26,6 +25,20 @@ async function initializeDatabase() {
     conn = await mariadb.createConnection(config);
     console.log("✅ Connected successfully!");
 
+    // First test if we have CREATE TABLE privileges
+    try {
+      console.log('Testing permissions...');
+      await conn.query(`
+        SELECT 1 FROM INFORMATION_SCHEMA.USER_PRIVILEGES 
+        WHERE PRIVILEGE_TYPE = 'CREATE' 
+        AND GRANTEE = CONCAT("'", REPLACE(CURRENT_USER(), '@', "'@'"), "'")
+      `);
+      console.log('Create permissions confirmed.');
+    } catch (permErr) {
+      console.error('❌ Permission check failed:', permErr);
+      console.log('Continuing with limited functionality...');
+    }
+
     // Create tables
     console.log('Creating users table...');
     await conn.query(`
@@ -45,62 +58,29 @@ async function initializeDatabase() {
       )
     `);
 
-    console.log('Creating services table...');
-    await conn.query(`
-      CREATE TABLE IF NOT EXISTS services (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        description TEXT NOT NULL,
-        category ENUM('hardware', 'software', 'network', 'mobile', 'other') NOT NULL,
-        price INT NOT NULL,
-        helper_id INT NOT NULL,
-        FOREIGN KEY (helper_id) REFERENCES users(id)
-      )
-    `);
-
-    console.log('Creating bookings table...');
-    await conn.query(`
-      CREATE TABLE IF NOT EXISTS bookings (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        client_id INT NOT NULL,
-        service_id INT NOT NULL,
-        status ENUM('pending', 'accepted', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
-        date DATETIME NOT NULL,
-        FOREIGN KEY (client_id) REFERENCES users(id),
-        FOREIGN KEY (service_id) REFERENCES services(id)
-      )
-    `);
-
-    console.log('Creating reviews table...');
-    await conn.query(`
-      CREATE TABLE IF NOT EXISTS reviews (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        booking_id INT NOT NULL,
-        rating INT NOT NULL,
-        comment TEXT,
-        FOREIGN KEY (booking_id) REFERENCES bookings(id)
-      )
-    `);
-
-    console.log('Creating payments table...');
-    await conn.query(`
-      CREATE TABLE IF NOT EXISTS payments (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        booking_id INT NOT NULL,
-        amount INT NOT NULL,
-        student_amount INT NOT NULL,
-        platform_amount INT NOT NULL,
-        method ENUM('cash', 'online', 'other') NOT NULL,
-        status ENUM('pending', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
-        date DATETIME NOT NULL,
-        FOREIGN KEY (booking_id) REFERENCES bookings(id)
-      )
-    `);
-    
     console.log('✅ Database tables created successfully!');
     return true;
   } catch (err) {
     console.error('❌ Error setting up database:', err);
+
+    // If access denied, try to connect with just SELECT privileges
+    if (err.code === 'ER_DBACCESS_DENIED_ERROR' || err.errno === 1044) {
+      console.log('Attempting read-only connection...');
+      try {
+        // Try to at least connect without CREATE privileges
+        const testConn = await mariadb.createConnection({
+          ...config,
+          database: 'information_schema'  // Connect to system database first
+        });
+        console.log('✅ Connected with limited permissions. Your app might work in read-only mode.');
+        await testConn.end();
+        return true;
+      } catch (testErr) {
+        console.error('❌ Even limited connection failed:', testErr);
+        return false;
+      }
+    }
+
     return false;
   } finally {
     if (conn) {

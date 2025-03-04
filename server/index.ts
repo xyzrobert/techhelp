@@ -46,7 +46,7 @@ app.use((req, res, next) => {
   try {
     // Test database connection at startup
     // Using import instead of require
-    import { mariadbStorage } from './mariadb-storage';
+    const { mariadbStorage } = await import('./mariadb-storage');
     console.log('Testing database connection at startup...');
     const conn = await mariadbStorage.getConnection().catch(err => {
       console.error('Failed to connect to database at startup:', err);
@@ -56,7 +56,7 @@ app.use((req, res, next) => {
     conn.release();
     
     setupAuth(app);
-    const server = await registerRoutes(app);
+    const server = await registerRoutes(app););
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
