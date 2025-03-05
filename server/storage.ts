@@ -1,3 +1,5 @@
+
+
 import { 
   users, type User, type InsertUser,
   services, type Service, type InsertService,
@@ -33,68 +35,29 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUserOnlineStatus(id: number, isOnline: boolean): Promise<User>;
   getOnlineHelpers(): Promise<User[]>;
-  setUserVerified(userId: number, verified: boolean): Promise<User>;
-
+  
   // Services
   createService(service: InsertService): Promise<Service>;
   getService(id: number): Promise<Service | undefined>;
   getHelperServices(helperId: number): Promise<Service[]>;
   searchServices(category?: string): Promise<Service[]>;
-
+  
   // Bookings
   createBooking(booking: InsertBooking): Promise<Booking>;
   getBooking(id: number): Promise<Booking | undefined>;
   getUserBookings(userId: number): Promise<Booking[]>;
   updateBookingStatus(id: number, status: string): Promise<Booking>;
-
+  
   // Reviews
   createReview(review: InsertReview): Promise<Review>;
   getServiceReviews(serviceId: number): Promise<Review[]>;
-
+  
   // Payments
   createPayment(payment: InsertPayment): Promise<Payment>;
   getPayment(id: number): Promise<Payment | undefined>;
   getBookingPayment(bookingId: number): Promise<Payment | undefined>;
   getAllPayments(): Promise<Payment[]>;
   updatePaymentStatus(id: number, status: string): Promise<Payment>;
-
-  // Verifications
-  createVerification(data: Omit<Verification, 'id'>): Promise<Verification>;
-  getUserVerification(userId: number): Promise<Verification | null>;
-  getAllVerifications(): Promise<Verification[]>;
-  getVerification(id: number): Promise<Verification | null>;
-  reviewVerification(id: number, status: 'approved' | 'rejected', reviewedBy: number, feedback?: string): Promise<Verification>;
-}
-
-// Types for the in-memory data store
-interface User {
-  id: number;
-  username: string;
-  password: string;
-  name: string;
-  role: "client" | "helper" | "admin";
-  bio?: string;
-  phoneNumber?: string;
-  showPhone: boolean;
-  isOnline?: boolean;
-  verified?: boolean;
-}
-
-interface Verification {
-  id: number;
-  userId: number;
-  routerSetup: string;
-  wpsExplanation: string;
-  firewallSetting: string;
-  windowsIssue: string;
-  cableTypes: string;
-  technicalExperience: string;
-  toolsUsed: string;
-  status: 'pending' | 'approved' | 'rejected';
-  createdAt: Date;
-  reviewedBy?: number;
-  reviewedAt?: Date;
-  feedback?: string;
 }
 
 export class MemStorage implements IStorage {
@@ -103,7 +66,6 @@ export class MemStorage implements IStorage {
   private bookings: Map<number, Booking>;
   private reviews: Map<number, Review>;
   private payments: Map<number, Payment>;
-  private verifications: Map<number, Verification>;
   private currentIds: { [key: string]: number };
 
   constructor() {
@@ -112,14 +74,12 @@ export class MemStorage implements IStorage {
     this.bookings = new Map();
     this.reviews = new Map();
     this.payments = new Map();
-    this.verifications = new Map();
     this.currentIds = {
       users: 1,
       services: 1,
       bookings: 1,
       reviews: 1,
-      payments: 1,
-      verifications: 1
+      payments: 1
     };
   }
 
@@ -150,7 +110,7 @@ export class MemStorage implements IStorage {
   async updateUserOnlineStatus(id: number, isOnline: boolean): Promise<User> {
     const user = await this.getUser(id);
     if (!user) throw new Error("User not found");
-
+    
     const updated = { ...user, isOnline };
     this.users.set(id, updated);
     return updated;
@@ -161,15 +121,6 @@ export class MemStorage implements IStorage {
       user => user.role === "helper" && user.isOnline
     );
   }
-
-  async setUserVerified(userId: number, verified: boolean): Promise<User> {
-    const user = await this.getUser(userId);
-    if (!user) throw new Error("User not found");
-    const updated = {...user, verified};
-    this.users.set(userId, updated);
-    return updated;
-  }
-
 
   // Services
   async createService(insertService: InsertService): Promise<Service> {
@@ -222,7 +173,7 @@ export class MemStorage implements IStorage {
   async updateBookingStatus(id: number, status: string): Promise<Booking> {
     const booking = await this.getBooking(id);
     if (!booking) throw new Error("Booking not found");
-
+    
     const updated = { ...booking, status };
     this.bookings.set(id, updated);
     return updated;
@@ -271,38 +222,9 @@ export class MemStorage implements IStorage {
   async updatePaymentStatus(id: number, status: string): Promise<Payment> {
     const payment = await this.getPayment(id);
     if (!payment) throw new Error("Payment not found");
-
+    
     const updated = { ...payment, status };
     this.payments.set(id, updated);
-    return updated;
-  }
-
-  // Verifications
-  async createVerification(data: Omit<Verification, 'id'>): Promise<Verification> {
-    const id = this.currentIds.verifications++;
-    const verification: Verification = { id, ...data, createdAt: new Date() };
-    this.verifications.set(id, verification);
-    return verification;
-  }
-
-  async getUserVerification(userId: number): Promise<Verification | null> {
-    const verifications = Array.from(this.verifications.values()).filter(v => v.userId === userId);
-    return verifications.length > 0 ? verifications[0] : null;
-  }
-
-  async getAllVerifications(): Promise<Verification[]> {
-    return Array.from(this.verifications.values());
-  }
-
-  async getVerification(id: number): Promise<Verification | null> {
-    return this.verifications.get(id) || null;
-  }
-
-  async reviewVerification(id: number, status: 'approved' | 'rejected', reviewedBy: number, feedback?: string): Promise<Verification> {
-    const verification = await this.getVerification(id);
-    if (!verification) throw new Error("Verification not found");
-    const updated = { ...verification, status, reviewedBy, reviewedAt: new Date(), feedback };
-    this.verifications.set(id, updated);
     return updated;
   }
 }

@@ -1,3 +1,4 @@
+
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -6,7 +7,6 @@ import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupAuth } from "./auth";
-import { setupApplications } from "./applications"; // Added import for application routes
 
 const app = express();
 app.use(express.json());
@@ -46,10 +46,9 @@ app.use((req, res, next) => {
 (async () => {
   try {
     console.log('Starting server...');
-
+    
     setupAuth(app);
     const server = await registerRoutes(app);
-    setupApplications(app); // Added setup for application routes
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;

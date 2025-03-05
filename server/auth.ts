@@ -5,27 +5,6 @@ import { storage } from './storage';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// Create a test user for demonstration
-const createTestUser = async () => {
-  // Check if test user already exists
-  const existingUser = await storage.getUserByUsername('test@klarfix.com');
-  if (!existingUser) {
-    await storage.createUser({
-      username: 'test@klarfix.com',
-      password: 'test123',
-      name: 'Test User',
-      role: 'client',
-      bio: 'Dies ist ein Testkonto für Demonstrationszwecke',
-      phoneNumber: '+49 123 4567890',
-      showPhone: true
-    });
-    console.log('Test user created: test@klarfix.com / test123');
-  }
-};
-
-// Call this function immediately
-createTestUser();
-
 export function setupAuth(app: Express) {
   app.post('/api/auth/signup', async (req, res) => {
     try {
