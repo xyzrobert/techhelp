@@ -10,6 +10,7 @@ import Book from "@/pages/book";
 import Profile from "@/pages/profile";
 import Admin from "@/pages/admin";
 import Signup from "@/pages/signup";
+import Login from "@/pages/login";
 import HelperSignup from "@/pages/helper-signup";
 import ApplicationPage from "@/pages/application";
 
@@ -25,6 +26,7 @@ function Router() {
           <Route path="/profile" component={Profile} />
           <Route path="/admin" component={Admin} />
           <Route path="/signup" component={Signup} />
+          <Route path="/login" component={Login} />
           <Route path="/helper-signup" component={HelperSignup} />
           <Route path="/application" component={ApplicationPage} />
           <Route component={NotFound} />
