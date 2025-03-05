@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -35,7 +36,7 @@ export default function Login() {
     setError(null);
 
     try {
-      const response = await fetch(`${apiUrl}/api/auth/login`, {
+      const response = await fetch(`/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -70,7 +71,7 @@ export default function Login() {
       )}
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
             control={form.control}
             name="username"
@@ -78,7 +79,7 @@ export default function Login() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="deine.email@example.com" {...field} />
+                  <Input placeholder="email@example.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -92,7 +93,7 @@ export default function Login() {
               <FormItem>
                 <FormLabel>Passwort</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="Passwort" {...field} />
+                  <Input type="password" placeholder="••••••••" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -100,18 +101,16 @@ export default function Login() {
           />
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Anmelden..." : "Anmelden"}
+            {isLoading ? "Anmeldung..." : "Anmelden"}
           </Button>
         </form>
       </Form>
 
-      <div className="mt-4 text-center">
-        <p>
-          Noch kein Konto?{" "}
-          <a onClick={() => setLocation('/signup')} className="text-blue-600 cursor-pointer">
-            Registrieren
-          </a>
-        </p>
+      <div className="mt-6 text-center text-sm">
+        <span className="text-gray-600">Kein Konto?</span>{" "}
+        <a href="/signup" className="text-blue-600 hover:underline">
+          Registrieren
+        </a>
       </div>
     </div>
   );
