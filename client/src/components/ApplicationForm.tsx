@@ -287,3 +287,323 @@ export default function ApplicationForm() {
     </div>
   );
 }
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CheckCircle2 } from 'lucide-react';
+
+const formSchema = z.object({
+  name: z.string().min(1, "Name ist erforderlich"),
+  email: z.string()
+    .min(1, "Email ist erforderlich")
+    .email("Ungültige Email-Adresse"),
+  phone: z.string().min(1, "Telefonnummer ist erforderlich"),
+  problemType: z.string().min(1, "Problemtyp ist erforderlich"),
+  problemDescription: z.string()
+    .min(10, "Problembeschreibung muss mindestens 10 Zeichen lang sein"),
+  urgency: z.enum(["low", "medium", "high"], {
+    required_error: "Bitte Dringlichkeit auswählen",
+  }),
+  preferredContactMethod: z.enum(["email", "phone", "either"], {
+    required_error: "Bitte bevorzugte Kontaktmethode auswählen",
+  }),
+  previousAttempts: z.string().optional(),
+  deviceInfo: z.string().min(1, "Geräteinformationen sind erforderlich"),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+export default function ApplicationForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      problemType: "",
+      problemDescription: "",
+      urgency: "medium",
+      preferredContactMethod: "either",
+      previousAttempts: "",
+      deviceInfo: "",
+    },
+  });
+
+  const onSubmit = async (data: FormValues) => {
+    setIsSubmitting(true);
+    setSubmitError(null);
+    
+    try {
+      const response = await fetch('/api/applications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Fehler beim Senden der Bewerbung');
+      }
+      
+      setSubmitSuccess(true);
+      form.reset();
+    } catch (error) {
+      console.error('Application submission error:', error);
+      setSubmitError(error instanceof Error ? error.message : 'Unbekannter Fehler');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (submitSuccess) {
+    return (
+      <Alert className="bg-green-50 border-green-200">
+        <CheckCircle2 className="h-4 w-4 text-green-600" />
+        <AlertTitle className="text-green-800">Bewerbung erfolgreich gesendet!</AlertTitle>
+        <AlertDescription className="text-green-700">
+          Vielen Dank für deine Bewerbung. Wir werden uns bald bei dir melden.
+        </AlertDescription>
+        <Button 
+          className="mt-4"
+          onClick={() => setSubmitSuccess(false)}
+        >
+          Neue Bewerbung erstellen
+        </Button>
+      </Alert>
+    );
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {submitError && (
+          <Alert variant="destructive">
+            <AlertTitle>Fehler</AlertTitle>
+            <AlertDescription>{submitError}</AlertDescription>
+          </Alert>
+        )}
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Persönliche Informationen</h3>
+
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Vollständiger Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Max Mustermann" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="max@beispiel.de" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Telefonnummer</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+49 123 456789" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="preferredContactMethod"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Bevorzugte Kontaktmethode</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="email" id="email" />
+                      <Label htmlFor="email">Email</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="phone" id="phone" />
+                      <Label htmlFor="phone">Telefon</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="either" id="either" />
+                      <Label htmlFor="either">Beides ist in Ordnung</Label>
+                    </div>
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="space-y-4 pt-4 border-t">
+          <h3 className="text-lg font-medium">Problem Details</h3>
+
+          <FormField
+            control={form.control}
+            name="problemType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Art des Problems</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Wähle eine Kategorie" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="hardware">Computer/Hardware Problem</SelectItem>
+                    <SelectItem value="software">Software/Programm Problem</SelectItem>
+                    <SelectItem value="network">Internet/Netzwerk Problem</SelectItem>
+                    <SelectItem value="smartphone">Smartphone/Tablet Problem</SelectItem>
+                    <SelectItem value="printer">Drucker/Scanner Problem</SelectItem>
+                    <SelectItem value="other">Sonstiges</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="urgency"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Dringlichkeit</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Wie dringend ist dein Problem?" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="low">Niedrig - Kann warten</SelectItem>
+                    <SelectItem value="medium">Mittel - In einigen Tagen</SelectItem>
+                    <SelectItem value="high">Hoch - So schnell wie möglich</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="problemDescription"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Problembeschreibung</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Beschreibe dein Problem so genau wie möglich..."
+                    className="min-h-[120px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="previousAttempts"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Bisherige Lösungsversuche (optional)</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Was hast du bereits versucht, um das Problem zu lösen?"
+                    className="min-h-[80px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="deviceInfo"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Geräteinformationen</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="z.B. Windows 10 PC, iPhone 12, Samsung Galaxy S21..."
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <Button 
+          type="submit" 
+          className="w-full sm:w-auto"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Wird gesendet..." : "Bewerbung absenden"}
+        </Button>
+      </form>
+    </Form>
+  );
+}
