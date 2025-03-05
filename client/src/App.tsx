@@ -13,6 +13,11 @@ import Signup from "@/pages/signup";
 import Login from "@/pages/login";
 import HelperSignup from "@/pages/helper-signup";
 import ApplicationPage from "@/pages/application";
+import { useState, useEffect } from "react";
+import { UserMenu } from "./components/UserMenu";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+
 
 function Router() {
   return (
@@ -29,6 +34,7 @@ function Router() {
           <Route path="/login" component={Login} />
           <Route path="/helper-signup" component={HelperSignup} />
           <Route path="/application" component={ApplicationPage} />
+          <Route path="/verify" component={() => <div>Verify Page Placeholder</div>} /> {/* Placeholder for Verify Page */}
           <Route component={NotFound} />
         </Switch>
       </main>
@@ -37,10 +43,43 @@ function Router() {
 }
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [, navigate] = useLocation();
+
+  // Fetch the current user if logged in
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['/api/auth/me'],
+    onSuccess: (data) => {
+      setUser(data.user);
+    },
+    onError: () => {
+      setUser(null);
+    }
+  });
+
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <div className="min-h-screen flex flex-col">
+        <header className="border-b">
+          <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div className="flex items-center gap-6">
+              <a href="/" className="text-xl font-bold">Klarfix</a>
+              <nav className="hidden md:flex gap-6">
+                <a href="/helpers" className="text-sm font-medium hover:text-primary">Helfer finden</a>
+                <a href="/services" className="text-sm font-medium hover:text-primary">Services</a>
+                <a href="/about" className="text-sm font-medium hover:text-primary">Über uns</a>
+              </nav>
+            </div>
+
+            <UserMenu user={user} />
+          </div>
+        </header>
+
+        <main className="flex-1">
+          <Router />
+        </main>
+        <Toaster />
+      </div>
     </QueryClientProvider>
   );
 }

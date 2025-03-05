@@ -342,3 +342,491 @@ function ApplicationList() {
 }
 
 export { ApplicationList };
+import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CheckCircle, XCircle, AlertTriangle, User, Info } from "lucide-react";
+
+interface Verification {
+  id: number;
+  userId: number;
+  routerSetup: string;
+  wpsExplanation: string;
+  firewallSetting: string;
+  windowsIssue: string;
+  cableTypes: string;
+  technicalExperience: string;
+  toolsUsed: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  reviewedBy?: number;
+  reviewedAt?: string;
+  feedback?: string;
+  userName?: string;
+  userEmail?: string;
+}
+
+export default function AdminPage() {
+  const [, navigate] = useLocation();
+  const [selectedVerification, setSelectedVerification] = useState<Verification | null>(null);
+  const [feedback, setFeedback] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // Check if user is admin
+  const { data: userData } = useQuery({
+    queryKey: ['/api/auth/me'],
+    onError: () => {
+      navigate('/login');
+    }
+  });
+
+  useEffect(() => {
+    if (userData && userData.user.role !== 'admin') {
+      navigate('/');
+    }
+  }, [userData, navigate]);
+
+  // Fetch all verifications
+  const { data: verifications, refetch } = useQuery<Verification[]>({
+    queryKey: ['/api/admin/verifications'],
+    onError: () => {
+      setError("Fehler beim Laden der Verifikationen");
+    }
+  });
+
+  const pendingVerifications = verifications?.filter(v => v.status === 'pending') || [];
+  const reviewedVerifications = verifications?.filter(v => v.status !== 'pending') || [];
+
+  const handleApprove = async () => {
+    if (!selectedVerification) return;
+    
+    try {
+      const response = await fetch(`/api/admin/verifications/${selectedVerification.id}/review`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'approved',
+          feedback: feedback,
+        }),
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Fehler bei der Genehmigung");
+      }
+      
+      setSuccess("Verifizierung erfolgreich genehmigt");
+      refetch();
+      setSelectedVerification(null);
+      setFeedback("");
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+  
+  const handleReject = async () => {
+    if (!selectedVerification) return;
+    
+    if (!feedback.trim()) {
+      setError("Bitte gib ein Feedback an, warum die Verifizierung abgelehnt wurde");
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/admin/verifications/${selectedVerification.id}/review`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'rejected',
+          feedback: feedback,
+        }),
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Fehler bei der Ablehnung");
+      }
+      
+      setSuccess("Verifizierung erfolgreich abgelehnt");
+      refetch();
+      setSelectedVerification(null);
+      setFeedback("");
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  return (
+    <div className="container py-8">
+      <h1 className="text-2xl font-bold mb-6">Admin-Panel</h1>
+      
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Fehler</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
+      {success && (
+        <Alert className="mb-4 bg-green-50 border-green-200">
+          <CheckCircle className="h-4 w-4 text-green-500" />
+          <AlertTitle>Erfolg</AlertTitle>
+          <AlertDescription>{success}</AlertDescription>
+        </Alert>
+      )}
+      
+      <Tabs defaultValue="pending">
+        <TabsList className="mb-4">
+          <TabsTrigger value="pending">
+            Ausstehend
+            {pendingVerifications.length > 0 && (
+              <Badge variant="destructive" className="ml-2">
+                {pendingVerifications.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="reviewed">Bearbeitet</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="pending">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Ausstehende Verifizierungen</CardTitle>
+                  <CardDescription>
+                    Anfragen, die noch nicht geprüft wurden
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {pendingVerifications.length === 0 ? (
+                    <p className="text-muted-foreground">Keine ausstehenden Verifizierungen</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {pendingVerifications.map((verification) => (
+                        <div
+                          key={verification.id}
+                          className={`p-3 rounded-md cursor-pointer border ${
+                            selectedVerification?.id === verification.id
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/50"
+                          }`}
+                          onClick={() => setSelectedVerification(verification)}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-medium">{verification.userName || `Benutzer #${verification.userId}`}</p>
+                              <p className="text-sm text-muted-foreground">{verification.userEmail}</p>
+                            </div>
+                            <Badge variant="outline">Neu</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(verification.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="md:col-span-2">
+              {selectedVerification ? (
+                <Card>
+                  <CardHeader>
+                    <div className="flex justify-between">
+                      <div>
+                        <CardTitle>Verifizierung prüfen</CardTitle>
+                        <CardDescription>
+                          Eingereicht am {new Date(selectedVerification.createdAt).toLocaleDateString()}
+                        </CardDescription>
+                      </div>
+                      <Badge>
+                        {selectedVerification.status === 'pending' ? 'Ausstehend' :
+                         selectedVerification.status === 'approved' ? 'Genehmigt' : 'Abgelehnt'}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="font-medium flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          Benutzerinfo
+                        </h3>
+                        <div className="mt-2 p-3 rounded-md bg-gray-50">
+                          <p><strong>ID:</strong> {selectedVerification.userId}</p>
+                          <p><strong>Name:</strong> {selectedVerification.userName || 'Nicht verfügbar'}</p>
+                          <p><strong>Email:</strong> {selectedVerification.userEmail || 'Nicht verfügbar'}</p>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 className="font-medium">Router & Netzwerk-Wissen</h3>
+                        <Separator className="my-2" />
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                          <div className="p-3 rounded-md bg-gray-50">
+                            <p className="text-sm font-medium mb-1">Gateway-Adresse</p>
+                            <p className="text-sm">
+                              Antwort: {selectedVerification.routerSetup === 'c' ? (
+                                <span className="text-green-600 font-medium">Korrekt (192.168.1.1)</span>
+                              ) : (
+                                <span className="text-red-600 font-medium">Falsch</span>
+                              )}
+                            </p>
+                          </div>
+                          
+                          <div className="p-3 rounded-md bg-gray-50">
+                            <p className="text-sm font-medium mb-1">WPS Erklärung</p>
+                            <p className="text-sm break-words whitespace-pre-wrap">
+                              {selectedVerification.wpsExplanation}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 className="font-medium">Windows & Systemkenntnisse</h3>
+                        <Separator className="my-2" />
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                          <div className="p-3 rounded-md bg-gray-50">
+                            <p className="text-sm font-medium mb-1">Firewall-Einstellungen</p>
+                            <p className="text-sm">
+                              Antwort: {selectedVerification.firewallSetting === 'c' ? (
+                                <span className="text-green-600 font-medium">Korrekt (Win+R, firewall.cpl)</span>
+                              ) : (
+                                <span className="text-red-600 font-medium">Falsch</span>
+                              )}
+                            </p>
+                          </div>
+                          
+                          <div className="p-3 rounded-md bg-gray-50">
+                            <p className="text-sm font-medium mb-1">Windows-Startprobleme</p>
+                            <p className="text-sm">
+                              Antwort: {selectedVerification.windowsIssue === 'b' ? (
+                                <span className="text-green-600 font-medium">Korrekt (Autostart prüfen)</span>
+                              ) : (
+                                <span className="text-red-600 font-medium">Falsch</span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 className="font-medium">Hardware & Kabel</h3>
+                        <Separator className="my-2" />
+                        
+                        <div className="p-3 rounded-md bg-gray-50 mt-3">
+                          <p className="text-sm font-medium mb-1">Kabelempfehlung</p>
+                          <p className="text-sm">
+                            Antwort: {selectedVerification.cableTypes === 'c' ? (
+                              <span className="text-green-600 font-medium">Korrekt (CAT6-Ethernetkabel)</span>
+                            ) : (
+                              <span className="text-red-600 font-medium">Falsch</span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 className="font-medium">Erfahrung & Tools</h3>
+                        <Separator className="my-2" />
+                        
+                        <div className="space-y-3 mt-3">
+                          <div className="p-3 rounded-md bg-gray-50">
+                            <p className="text-sm font-medium mb-1">Technische Erfahrung</p>
+                            <p className="text-sm break-words whitespace-pre-wrap">
+                              {selectedVerification.technicalExperience}
+                            </p>
+                          </div>
+                          
+                          <div className="p-3 rounded-md bg-gray-50">
+                            <p className="text-sm font-medium mb-1">Verwendete Tools</p>
+                            <p className="text-sm">{selectedVerification.toolsUsed}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {selectedVerification.status === 'pending' && (
+                        <div>
+                          <h3 className="font-medium flex items-center gap-2">
+                            <Info className="h-4 w-4" />
+                            Feedback geben
+                          </h3>
+                          <Textarea
+                            placeholder="Optionales Feedback für den Benutzer..."
+                            className="mt-2"
+                            value={feedback}
+                            onChange={(e) => setFeedback(e.target.value)}
+                          />
+                          
+                          <div className="flex justify-end gap-2 mt-4">
+                            <Button 
+                              variant="outline" 
+                              onClick={handleReject}
+                              className="flex items-center gap-1"
+                            >
+                              <XCircle className="h-4 w-4" />
+                              Ablehnen
+                            </Button>
+                            <Button 
+                              onClick={handleApprove}
+                              className="flex items-center gap-1"
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                              Genehmigen
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {selectedVerification.status !== 'pending' && selectedVerification.feedback && (
+                        <div>
+                          <h3 className="font-medium">Feedback</h3>
+                          <div className="p-3 rounded-md bg-gray-50 mt-2">
+                            <p className="text-sm">{selectedVerification.feedback}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="flex items-center justify-center h-full min-h-[300px] border rounded-lg p-8">
+                  <div className="text-center">
+                    <h3 className="text-lg font-medium mb-2">Keine Verifizierung ausgewählt</h3>
+                    <p className="text-muted-foreground">
+                      Wähle eine Verifizierung aus der Liste aus, um die Details zu sehen
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="reviewed">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Bearbeitete Verifizierungen</CardTitle>
+                  <CardDescription>
+                    Bereits geprüfte Anfragen
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {reviewedVerifications.length === 0 ? (
+                    <p className="text-muted-foreground">Keine bearbeiteten Verifizierungen</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {reviewedVerifications.map((verification) => (
+                        <div
+                          key={verification.id}
+                          className={`p-3 rounded-md cursor-pointer border ${
+                            selectedVerification?.id === verification.id
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/50"
+                          }`}
+                          onClick={() => setSelectedVerification(verification)}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-medium">{verification.userName || `Benutzer #${verification.userId}`}</p>
+                              <p className="text-sm text-muted-foreground">{verification.userEmail}</p>
+                            </div>
+                            <Badge variant={verification.status === 'approved' ? 'default' : 'destructive'}>
+                              {verification.status === 'approved' ? 'Genehmigt' : 'Abgelehnt'}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Geprüft: {verification.reviewedAt ? new Date(verification.reviewedAt).toLocaleDateString() : 'Unbekannt'}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="md:col-span-2">
+              {selectedVerification ? (
+                <Card>
+                  <CardHeader>
+                    <div className="flex justify-between">
+                      <div>
+                        <CardTitle>Verifizierungsdetails</CardTitle>
+                        <CardDescription>
+                          Eingereicht am {new Date(selectedVerification.createdAt).toLocaleDateString()}
+                        </CardDescription>
+                      </div>
+                      <Badge variant={selectedVerification.status === 'approved' ? 'default' : 'destructive'}>
+                        {selectedVerification.status === 'approved' ? 'Genehmigt' : 'Abgelehnt'}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {/* Gleicher Inhalt wie im "pending" Tab */}
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="font-medium flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          Benutzerinfo
+                        </h3>
+                        <div className="mt-2 p-3 rounded-md bg-gray-50">
+                          <p><strong>ID:</strong> {selectedVerification.userId}</p>
+                          <p><strong>Name:</strong> {selectedVerification.userName || 'Nicht verfügbar'}</p>
+                          <p><strong>Email:</strong> {selectedVerification.userEmail || 'Nicht verfügbar'}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Weitere Abschnitte wie im "pending" Tab */}
+                      
+                      {selectedVerification.feedback && (
+                        <div>
+                          <h3 className="font-medium">Feedback</h3>
+                          <div className="p-3 rounded-md bg-gray-50 mt-2">
+                            <p className="text-sm">{selectedVerification.feedback}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="flex items-center justify-center h-full min-h-[300px] border rounded-lg p-8">
+                  <div className="text-center">
+                    <h3 className="text-lg font-medium mb-2">Keine Verifizierung ausgewählt</h3>
+                    <p className="text-muted-foreground">
+                      Wähle eine Verifizierung aus der Liste aus, um die Details zu sehen
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
