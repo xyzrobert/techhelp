@@ -7,6 +7,27 @@ import {
   reviews, type Review, type InsertReview
 } from "@shared/schema";
 
+// Payment interface
+export interface Payment {
+  id: number;
+  bookingId: number;
+  amount: number;
+  studentAmount: number;
+  platformAmount: number;
+  method: string;
+  status: string;
+  date: Date;
+}
+
+export interface InsertPayment {
+  bookingId: number;
+  amount: number;
+  studentAmount: number;
+  platformAmount: number;
+  method: string;
+  date: Date;
+}
+
 export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
