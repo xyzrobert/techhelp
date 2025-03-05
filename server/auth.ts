@@ -1,11 +1,7 @@
-
 import { Express } from 'express';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
-import { mariadbStorage } from './mariadb-storage';
-
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
 export function setupAuth(app: Express) {
   app.post('/api/auth/signup', async (req, res) => {
     try {
@@ -18,6 +14,21 @@ export function setupAuth(app: Express) {
         showPhone: z.boolean().default(false),
         phoneNumber: z.string().optional(),
       }).parse(req.body);
+      // Example replacement for DB logic could go here
+      // For now, you can just simulate user creation without DB access
+      // or implement a new storage logic that doesn't use mariadb.
+      res.status(201).json({ message: 'User created successfully' });
+    } catch (error) {
+      console.error('Signup error:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors[0].message });
+      } else {
+        res.status(500).json({ error: 'Registration failed' });
+      }
+    }
+  });
+  // Keep the login function and other API functionalities here...
+
 
       // Check if user already exists
       const conn = await mariadbStorage.getConnection();
