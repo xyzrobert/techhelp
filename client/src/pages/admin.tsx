@@ -427,3 +427,10 @@ export default function AdminPage() {
     </div>
   );
 }
+
+function ApplicationList() {
+  //This component will be implemented later.
+  return <div>Application List Component</div>;
+}
+
+export {ApplicationList};
