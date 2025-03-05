@@ -1,31 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation } from 'wouter';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from '@/components/ui/card';
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button, Badge } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+
 
 interface Application {
   id: number;
@@ -43,93 +22,22 @@ interface Application {
   assignedToId?: number;
 }
 
-export default function Admin() {
-  return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+// Custom hook to get the current location
+function useLocation() {
+  const [location, setLocation] = useState(window.location.pathname);
 
-      <Tabs defaultValue="users">
-        <TabsList className="mb-4">
-          <TabsTrigger value="users">Benutzer</TabsTrigger>
-          <TabsTrigger value="services">Dienstleistungen</TabsTrigger>
-          <TabsTrigger value="bookings">Buchungen</TabsTrigger>
-          <TabsTrigger value="payments">Zahlungen</TabsTrigger>
-        </TabsList>
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setLocation(window.location.pathname);
+    };
 
-        <TabsContent value="users">
-          <Card>
-            <CardHeader>
-              <CardTitle>Benutzer Verwaltung</CardTitle>
-              <CardDescription>Alle registrierten Benutzer und Helfer verwalten</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p>Hier können Sie Benutzer verwalten, verifizieren und bearbeiten.</p>
-                {/* Benutzer-Tabelle oder -Liste hier einfügen */}
-                <div className="border rounded p-4">
-                  <p className="text-muted-foreground">Benutzer-Daten werden hier angezeigt.</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+    window.addEventListener('popstate', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+    };
+  }, []);
 
-        <TabsContent value="services">
-          <Card>
-            <CardHeader>
-              <CardTitle>Dienstleistungsverwaltung</CardTitle>
-              <CardDescription>Alle angebotenen Dienstleistungen überprüfen</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p>Hier können Sie Dienstleistungen überprüfen, genehmigen oder ablehnen.</p>
-                {/* Dienstleistungs-Tabelle oder -Liste hier einfügen */}
-                <div className="border rounded p-4">
-                  <p className="text-muted-foreground">Dienste werden hier angezeigt.</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="bookings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Buchungsverwaltung</CardTitle>
-              <CardDescription>Alle getätigten Buchungen überwachen</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p>Hier können Sie alle Buchungen einsehen und den Status überwachen.</p>
-                {/* Buchungs-Tabelle oder -Liste hier einfügen */}
-                <div className="border rounded p-4">
-                  <p className="text-muted-foreground">Buchungen werden hier angezeigt.</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="payments">
-          <Card>
-            <CardHeader>
-              <CardTitle>Zahlungsverwaltung</CardTitle>
-              <CardDescription>Zahlungsübersicht und -abwicklung</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p>Hier können Sie Zahlungen überwachen und verwalten.</p>
-                {/* Zahlungs-Tabelle oder -Liste hier einfügen */}
-                <div className="border rounded p-4">
-                  <p className="text-muted-foreground">Zahlungen werden hier angezeigt.</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
+  return [location];
 }
 
 export default function AdminPage() {
@@ -140,10 +48,11 @@ export default function AdminPage() {
   const [location] = useLocation();
 
   // Check if we're on the correct URL
-  if (location !== '/admin') {
-    // This redirects to /admin when accessed via /admin/
-    window.location.href = '/admin';
-  }
+  useEffect(() => {
+    if (location !== '/admin' && location !== '/admin/') {
+      window.location.href = '/admin';
+    }
+  }, [location]);
 
   // Sample user (in a real app, this would come from authentication)
   const currentUser = {
@@ -183,21 +92,18 @@ export default function AdminPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update status');
+        throw new Error('Failed to update application status');
       }
 
-      // Update the local state
-      setApplications(
-        applications.map(app => 
+      // Update the applications list with the new status
+      setApplications(prevApps =>
+        prevApps.map(app =>
           app.id === id ? { ...app, status: newStatus } : app
         )
       );
-
-      if (selectedApp?.id === id) {
-        setSelectedApp({ ...selectedApp, status: newStatus });
-      }
     } catch (err) {
-      console.error('Error updating status:', err);
+      setError('Error updating status. Please try again.');
+      console.error(err);
     }
   };
 
@@ -321,22 +227,22 @@ export default function AdminPage() {
 
                         <DialogFooter className="flex justify-between">
                           <div className="space-x-2">
-                            <Button 
-                              variant={selectedApp.status === 'reviewing' ? 'secondary' : 'outline'} 
+                            <Button
+                              variant={selectedApp.status === 'reviewing' ? 'secondary' : 'outline'}
                               onClick={() => handleStatusChange(selectedApp.id, 'reviewing')}
                               disabled={selectedApp.status === 'reviewing'}
                             >
                               In Prüfung
                             </Button>
-                            <Button 
-                              variant={selectedApp.status === 'approved' ? 'default' : 'outline'} 
+                            <Button
+                              variant={selectedApp.status === 'approved' ? 'default' : 'outline'}
                               onClick={() => handleStatusChange(selectedApp.id, 'approved')}
                               disabled={selectedApp.status === 'approved'}
                             >
                               Genehmigen
                             </Button>
-                            <Button 
-                              variant={selectedApp.status === 'rejected' ? 'destructive' : 'outline'} 
+                            <Button
+                              variant={selectedApp.status === 'rejected' ? 'destructive' : 'outline'}
                               onClick={() => handleStatusChange(selectedApp.id, 'rejected')}
                               disabled={selectedApp.status === 'rejected'}
                             >
@@ -359,14 +265,14 @@ export default function AdminPage() {
         <TabsContent value="users">
           <Card>
             <CardHeader>
-              <CardTitle>Benutzer Verwaltung</CardTitle>
-              <CardDescription>Alle registrierten Benutzer und Helfer verwalten</CardDescription>
+              <CardTitle>Benutzerverwaltung</CardTitle>
+              <CardDescription>Alle registrierten Benutzer anzeigen und verwalten</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <p>Hier können Sie Benutzer verwalten, verifizieren und bearbeiten.</p>
+                <p>Hier können Sie Benutzer anzeigen und verwalten.</p>
                 <div className="border rounded p-4">
-                  <p className="text-muted-foreground">Benutzer-Daten werden hier angezeigt.</p>
+                  <p className="text-muted-foreground">Benutzerdaten werden hier angezeigt.</p>
                 </div>
               </div>
             </CardContent>
@@ -376,14 +282,14 @@ export default function AdminPage() {
         <TabsContent value="services">
           <Card>
             <CardHeader>
-              <CardTitle>Dienstleistungsverwaltung</CardTitle>
-              <CardDescription>Alle angebotenen Dienstleistungen überprüfen</CardDescription>
+              <CardTitle>Dienstleistungen</CardTitle>
+              <CardDescription>Alle angebotenen Dienstleistungen verwalten</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <p>Hier können Sie Dienstleistungen verwalten, genehmigen und bearbeiten.</p>
+                <p>Hier können Sie Dienstleistungen einsehen und verwalten.</p>
                 <div className="border rounded p-4">
-                  <p className="text-muted-foreground">Dienstleistungen werden hier angezeigt.</p>
+                  <p className="text-muted-foreground">Dienstleistungsdaten werden hier angezeigt.</p>
                 </div>
               </div>
             </CardContent>
@@ -428,9 +334,10 @@ export default function AdminPage() {
   );
 }
 
+// Helper component for displaying application list
 function ApplicationList() {
-  //This component will be implemented later.
+  // This component will be implemented later.
   return <div>Application List Component</div>;
 }
 
-export {ApplicationList};
+export { ApplicationList };
