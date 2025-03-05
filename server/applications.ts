@@ -2,6 +2,7 @@
 import { Express, Request, Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken } from './auth';
+import { storage } from './storage';
 
 // In-memory storage for applications
 let applications: Application[] = [];
@@ -22,6 +23,35 @@ interface Application {
   dateSubmitted: Date;
   assignedToId?: number;
 }
+
+// Type definition for verification
+export interface Verification {
+  id: number;
+  userId: number;
+  routerSetup: string;
+  wpsExplanation: string;
+  firewallSetting: string;
+  windowsIssue: string;
+  cableTypes: string;
+  technicalExperience: string;
+  toolsUsed: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: Date;
+  reviewedBy?: number;
+  reviewedAt?: Date;
+  feedback?: string;
+}
+
+// Add the verification schema
+const verificationSchema = z.object({
+  routerSetup: z.enum(['a', 'b', 'c', 'd']),
+  wpsExplanation: z.string().min(20),
+  firewallSetting: z.enum(['a', 'b', 'c', 'd']),
+  windowsIssue: z.enum(['a', 'b', 'c', 'd']),
+  cableTypes: z.enum(['a', 'b', 'c', 'd']),
+  technicalExperience: z.string().min(50),
+  toolsUsed: z.string().min(10),
+});
 
 export function setupApplications(app: Express) {
   // Submit application endpoint
@@ -161,43 +191,7 @@ export function setupApplications(app: Express) {
       }
     }
   });
-}
-import { Express } from 'express';
-import { z } from 'zod';
-import { authenticateToken } from './auth';
-import { storage } from './storage';
 
-// Type definition for verification
-export interface Verification {
-  id: number;
-  userId: number;
-  routerSetup: string;
-  wpsExplanation: string;
-  firewallSetting: string;
-  windowsIssue: string;
-  cableTypes: string;
-  technicalExperience: string;
-  toolsUsed: string;
-  status: 'pending' | 'approved' | 'rejected';
-  createdAt: Date;
-  reviewedBy?: number;
-  reviewedAt?: Date;
-  feedback?: string;
-}
-
-// Add the verification schema
-const verificationSchema = z.object({
-  routerSetup: z.enum(['a', 'b', 'c', 'd']),
-  wpsExplanation: z.string().min(20),
-  firewallSetting: z.enum(['a', 'b', 'c', 'd']),
-  windowsIssue: z.enum(['a', 'b', 'c', 'd']),
-  cableTypes: z.enum(['a', 'b', 'c', 'd']),
-  technicalExperience: z.string().min(50),
-  toolsUsed: z.string().min(10),
-});
-
-// Setup the applications routes
-export function setupApplications(app: Express) {
   // Endpoint to submit verification
   app.post('/api/verifications', authenticateToken, async (req: any, res) => {
     try {
