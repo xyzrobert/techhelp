@@ -1,12 +1,13 @@
-
-import dotenv from 'dotenv';
-dotenv.config();
+// Load environment variables first
+import './load-env.js';
 
 import express, { type Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupAuth } from "./auth";
+import { testConnection } from "./db";
+import { registerAdminRoutes } from "./admin";
 
 const app = express();
 app.use(express.json());
@@ -46,8 +47,15 @@ app.use((req, res, next) => {
 (async () => {
   try {
     console.log('Starting server...');
+
+    // Test database connection
+    const isConnected = await testConnection();
+    if (!isConnected) {
+      throw new Error('Failed to connect to database');
+    }
     
     setupAuth(app);
+    registerAdminRoutes(app); // Register admin routes before general routes
     const server = await registerRoutes(app);
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -70,12 +78,10 @@ app.use((req, res, next) => {
     // Use environment variable for port or default to 3000
     // this avoids port conflicts
     const port = process.env.PORT || 3000;
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
-      log(`serving on port ${port}`);
+    const host = 'localhost';
+
+    server.listen(Number(port), host, () => {
+      log(`Server running at http://${host}:${port}`);
     });
   } catch (err) {
     console.error('Failed to start server:', err);

@@ -1,10 +1,33 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
+import { HelpCircle } from "lucide-react";
+import React from "react";
 
 export default function Home() {
+  const [showOnboarding, setShowOnboarding] = React.useState(() => {
+    // Show onboarding if user hasn't seen it before
+    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+    return !hasSeenOnboarding;
+  });
+
+  React.useEffect(() => {
+    if (showOnboarding) {
+      // Mark onboarding as seen
+      localStorage.setItem('hasSeenOnboarding', 'true');
+    }
+  }, [showOnboarding]);
+
+  const startTutorial = () => {
+    setShowOnboarding(true);
+  };
+
+  if (showOnboarding) {
+    return <OnboardingFlow onClose={() => setShowOnboarding(false)} />;
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center bg-background px-4 py-10">
       {/* Hero Section */}
@@ -15,11 +38,25 @@ export default function Home() {
         <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
           Technische Hilfe von vertrauenswürdigen Helfern in Ihrer Nähe
         </p>
-        <Link href="/search">
-          <Button size="lg" className="text-xl py-6 px-12 rounded-full bg-primary hover:bg-primary/90 transition-all">
-            Hilfe finden
+        <div className="flex items-center justify-center gap-4">
+          <Link href="/search">
+            <Button 
+              size="lg" 
+              className="text-xl py-6 px-12 rounded-full bg-[#22c55e] hover:bg-[#16a34a] text-white transition-all"
+            >
+              Hilfe finden
+            </Button>
+          </Link>
+          <Button
+            size="lg"
+            variant="outline"
+            className="text-xl py-6 px-8 rounded-full flex items-center gap-2"
+            onClick={startTutorial}
+          >
+            <HelpCircle className="h-6 w-6" />
+            Tutorial starten
           </Button>
-        </Link>
+        </div>
       </div>
 
       {/* Service Categories */}

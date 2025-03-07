@@ -1,3 +1,5 @@
+// API configuration
+export const apiUrl = ''; // Empty string for same-origin requests in development
 
 /**
  * API helper functions with proper error handling
@@ -5,7 +7,10 @@
 
 export async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   try {
-    const response = await fetch(url, options);
+    const response = await fetch(url, {
+      ...options,
+      credentials: 'include', // Important for cookies
+    });
     
     // Check if response is OK
     if (!response.ok) {

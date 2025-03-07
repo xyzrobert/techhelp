@@ -17,6 +17,18 @@ export const users = pgTable("users", {
   verified: boolean("verified").default(false),
 });
 
+export const contactRequests = pgTable("contact_requests", {
+  id: serial("id").primaryKey(),
+  helperId: integer("helper_id").notNull(),
+  clientPhone: text("client_phone").notNull(),
+  status: text("status", { 
+    enum: ["pending", "contacted", "failed"] 
+  }).notNull().default("pending"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  notes: text("notes"),
+});
+
 export const services = pgTable("services", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
@@ -86,6 +98,14 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
   status: true
 });
 
+export const insertContactRequestSchema = createInsertSchema(contactRequests).omit({ 
+  id: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+  notes: true
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Service = typeof services.$inferSelect;
@@ -96,3 +116,5 @@ export type Review = typeof reviews.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type ContactRequest = typeof contactRequests.$inferSelect;
+export type InsertContactRequest = z.infer<typeof insertContactRequestSchema>;
